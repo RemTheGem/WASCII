@@ -24,4 +24,8 @@ All the processing happens in your browser so I have no access to the files you 
 You can also copy frames with the copy button up top (or spacebar as a shortcut). 
 Grayscale is copied as text, whereas colored frames are copied as a PNG to your clipboard!
 
-## 
+## Try it yourself!
+
+You can try it for yourself!
+Works on most browsers.
+**[Try it here!](https://remthegem.github.io/WASCII/)**.
