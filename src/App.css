@@ -28,9 +28,23 @@ body
   justify-content: center;
   align-items: center;
 }
+.stage pre,
+.stage canvas{
+  transform-origin: center;
+}
 pre
 {
   margin: 0;
   font: 8px/8px monospace;
   color: #fff;
+}
+.toast{
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 16px;
+  background: #222;
+  color: white;
+  border-radius: 6px;
+  z-index: 1000;
 }

@@ -11,6 +11,7 @@ export default function App(){
   const [zoom, setZoom] = useState(1)
   const [invert, setInvert] = useState(false)
   const [color, setColor] = useState(false)
+  const [message, setMessage] = useState('')
 
 
   const settings = useRef({ contrast, zoom, invert, color})
@@ -18,6 +19,18 @@ export default function App(){
     settings.current = {contrast, zoom, invert, color}
   }, [contrast, zoom, invert, color])
 
+  useEffect(() =>{
+    const handleKeyDown = (e) => {
+      switch(e.code){
+        case 'Space':
+          e.preventDefault()
+          color ? copyFrame() : copyAsText()
+          break
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return()=>window.removeEventListener('keydown', handleKeyDown)
+  }, [color])
   useEffect(() => {
     const video = videoRef.current
     const pre = preRef.current
@@ -42,6 +55,14 @@ export default function App(){
         )
         const columns = Math.max(1, Math.floor((video.videoWidth * scale) / cellWidth))
         const rows = Math.max(1, Math.floor((video.videoHeight * scale) / cellHeight))
+        const contentWidth = columns * cellWidth
+        const contentHeight = rows * cellHeight
+
+        const fitScale = Math.min(stage.clientWidth / contentWidth, stage.clientHeight/ contentHeight)
+        const transform = `scale(${fitScale})`
+
+        pre.style.transform = transform
+        displayCanvas.style.transform = transform
 
         canvas.width = columns
         canvas.height = rows
@@ -119,13 +140,19 @@ export default function App(){
   }
   const copyAsText = ()  => {
       if(color) return;
-      navigator.clipboard.writeText(preRef.current.textContent)
+        navigator.clipboard.writeText(preRef.current.textContent)
+        showMessage('Copied as Text!')
   }
   const copyFrame = ()  => {
     if(!color) return;
       displayCanvasRef.current.toBlob((blob) => {
         navigator.clipboard.write([new ClipboardItem({'image/png' : blob})])
       })
+      showMessage('Frame Copied!')
+  }
+  const showMessage = (text) => {
+    setMessage(text)
+    setTimeout(() => setMessage(''), 2000)
   }
   return (
     <div className='app'>
@@ -152,6 +179,7 @@ export default function App(){
           <input type='range' min='0.5' max='2' step='0.1' value={zoom}
           onChange={(e) => setZoom(+e.target.value)} />
         </label>
+        {message && <div className='toast'>{message}</div>}
       </div>
       <div className='stage'>
         <pre ref={preRef} />
