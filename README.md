@@ -1,16 +1,27 @@
-# React + Vite
+# WASCII
+WASCII is a web version of my previous video to ASCII application.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+It uses your camera or a local video as source and turns it into ASCII art live. 
+You can adjust the zoom (scale), contrast and colors (grayscale/colored).
+## Demo
 
-Currently, two official plugins are available:
+<p float="center">
+<img src="assets/WASCII_demo.gif" height="550"/>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## How to use
+### Camera
+- Press camera button
+- Enjoy!?
 
-## React Compiler
+### Local Video File
+- Press "Browse..."
+- Select the video you want to see as ASCII
+- Enjoy!
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+All the processing happens in your browser so I have no access to the files you use.
 
-## Expanding the ESLint configuration
+You can also copy frames with the copy button up top (or spacebar as a shortcut). 
+Grayscale is copied as text, whereas colored frames are copied as a PNG to your clipboard!
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 
