@@ -63,9 +63,11 @@ export default function App(){
               const r = data[i], g = data[i +1], b = data[i+2]
               let gray = 0.299 *r + 0.587 *g + 0.114 * b
               gray = Math.min(255, Math.max(0, (gray -128) * contrast + 128))
-              const brightness = invert ? 255 - gray : gray
-              const index = Math.floor(((255 - brightness) * (CHARS.length -1)) / 255)
-              displayCtx.fillStyle = `rgb(${r}, ${g}, ${b})`
+              const index = Math.floor(((255 - gray) * (CHARS.length -1)) / 255)
+              const ir = invert ? 255 - r : r;
+              const ig = invert ? 255 - g : g;
+              const ib = invert ? 255 - b : b;
+              displayCtx.fillStyle = `rgb(${ir}, ${ig}, ${ib})`
               displayCtx.fillText(CHARS[index], x * cellWidth, y * cellHeight)
             }
           }
