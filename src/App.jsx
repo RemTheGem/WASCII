@@ -115,14 +115,15 @@ export default function App(){
     const video = videoRef.current
     video.paused ? video.play()  : video.pause()
   }
+  const copyAsText = ()  => {
+      if(color) return;
+      navigator.clipboard.writeText(preRef.current.textContent)
+  }
   const copyFrame = ()  => {
-    if(color) {
+    if(!color) return;
       displayCanvasRef.current.toBlob((blob) => {
         navigator.clipboard.write([new ClipboardItem({'image/png' : blob})])
       })
-    } else {
-      navigator.clipboard.writeText(preRef.current.textContent)
-    }
   }
   return (
     <div className='app'>
@@ -130,7 +131,9 @@ export default function App(){
         <input type='file' accept='video/*' onChange={loadFile} />
         <button onClick={toggleCamera}>Camera</button>
         <button onClick={togglePlay}>Play / Pause</button>
-        <button onClick={copyFrame}>Copy Frame</button>
+        {color ? <button onClick={copyFrame}>Copy Frame</button>
+        : <button onClick={copyAsText}>Copy as Text</button>
+        }
         <label>
           <input type='checkbox' checked={color} onChange={(e)=>setColor(e.target.checked)} /> Color
         </label>
