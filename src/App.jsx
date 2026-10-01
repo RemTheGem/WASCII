@@ -1,0 +1,158 @@
+import {useRef, useState, useEffect } from 'react'
+import './App.css'
+
+const CHARS = "@#S%?*+;:,.' "
+
+export default function App(){
+  const videoRef = useRef(null)
+  const preRef = useRef(null)
+  const displayCanvasRef = useRef(null)
+  const [contrast, setContrast] = useState(1.15)
+  const [zoom, setZoom] = useState(1)
+  const [invert, setInvert] = useState(false)
+  const [color, setColor] = useState(false)
+
+
+  const settings = useRef({ contrast, zoom, invert, color})
+  useEffect(() => {
+    settings.current = {contrast, zoom, invert, color}
+  }, [contrast, zoom, invert, color])
+
+  useEffect(() => {
+    const video = videoRef.current
+    const pre = preRef.current
+    const displayCanvas = displayCanvasRef.current
+    const displayCtx = displayCanvas.getContext('2d')
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d', {willReadFrequently: true})
+
+    const m = document.createElement('canvas').getContext('2d')
+    m.font = '8px monospace'
+    const cellWidth = m.measureText('@').width
+    const cellHeight = 8
+
+    let handle
+    const loop = () => {
+      if(video.videoWidth && !video.paused){
+        const {contrast, zoom, invert, color} = settings.current
+        const stage = pre.parentElement
+        const scale = Math.min(
+          (stage.clientWidth * zoom) / video.videoWidth,
+          (stage.clientHeight * zoom) / video.videoHeight
+        )
+        const columns = Math.max(1, Math.floor((video.videoWidth * scale) / cellWidth))
+        const rows = Math.max(1, Math.floor((video.videoHeight * scale) / cellHeight))
+
+        canvas.width = columns
+        canvas.height = rows
+        ctx.drawImage(video, 0, 0, columns, rows)
+        const {data} = ctx.getImageData(0,0,columns, rows)
+        if(color){
+          pre.style.display = 'none'
+          displayCanvas.style.display = 'block'
+          displayCanvas.width = columns * cellWidth
+          displayCanvas.height = rows *cellHeight
+          displayCtx.font = '8px monospace'
+          displayCtx.textBaseline = 'top'
+          displayCtx.fillStyle = '#2d2d2d'
+          displayCtx.fillRect(0,0, displayCanvas.width, displayCanvas.height)
+
+          for(let y = 0; y < rows; y++){
+            for(let x = 0; x < columns ; x++){
+              const i = (y * columns + x) * 4
+              const r = data[i], g = data[i +1], b = data[i+2]
+              let gray = 0.299 *r + 0.587 *g + 0.114 * b
+              gray = Math.min(255, Math.max(0, (gray -128) * contrast + 128))
+              const brightness = invert ? 255 - gray : gray
+              const index = Math.floor(((255 - brightness) * (CHARS.length -1)) / 255)
+              displayCtx.fillStyle = `rgb(${r}, ${g}, ${b})`
+              displayCtx.fillText(CHARS[index], x * cellWidth, y * cellHeight)
+            }
+          }
+        } else{
+          pre.style.display = 'block'
+          displayCanvas.style.display = 'none'
+          let out = ''
+          for(let y = 0;y < rows; y++){
+            for(let x = 0; x < columns; x++){
+              const i = (y * columns +x) * 4
+              let gray = 0.299 * data[i] + 0.587 * data [i + 1] + 0.114 * data[i +2]
+              gray = Math.min(255, Math.max(0, (gray - 128) * contrast + 128))
+              if (invert) gray = 255 - gray
+              out += CHARS[Math.floor(((255 - gray) * (CHARS.length-1)) / 255)]
+            }
+            out += '\n'
+          }
+          pre.textContent = out
+        }
+      }
+      handle = requestAnimationFrame(loop)
+    }
+    loop()
+    return () => cancelAnimationFrame(handle)
+  }, [])
+  const stopCamera = () => {
+    const video = videoRef.current
+    video.srcObject?.getTracks().forEach((t) => t.stop())
+    video.srcObject = null
+  }
+  const loadFile = (e) => {
+    const file = e.target.files[0]
+    if(!file) return
+    stopCamera()
+    const video = videoRef.current
+    video.src = URL.createObjectURL(file)
+    video.play()
+  }
+  const toggleCamera = async ()=> {
+    const video = videoRef.current
+    if(video.srcObject) return stopCamera()
+    video.removeAttribute('src')
+    video.srcObject = await navigator.mediaDevices.getUserMedia({video: true})
+    video.play()
+  }
+  const togglePlay  = () => {
+    const video = videoRef.current
+    video.paused ? video.play()  : video.pause()
+  }
+  const copyFrame = ()  => {
+    if(color) {
+      displayCanvasRef.current.toBlob((blob) => {
+        navigator.clipboard.write([new ClipboardItem({'image/png' : blob})])
+      })
+    } else {
+      navigator.clipboard.writeText(preRef.current.textContent)
+    }
+  }
+  return (
+    <div className='app'>
+      <div className='controls'>
+        <input type='file' accept='video/*' onChange={loadFile} />
+        <button onClick={toggleCamera}>Camera</button>
+        <button onClick={togglePlay}>Play / Pause</button>
+        <button onClick={copyFrame}>Copy Frame</button>
+        <label>
+          <input type='checkbox' checked={color} onChange={(e)=>setColor(e.target.checked)} /> Color
+        </label>
+        <label>
+          <input type='checkbox' checked={invert} onChange={(e)=>setInvert(e.target.checked)} /> Invert
+        </label>
+        <label>
+          Contrast{' '}
+          <input type='range' min='0.1' max='2' step='0.05' value={contrast}
+          onChange={(e) => setContrast(+e.target.value)} />
+        </label>
+        <label>
+          Zoom{' '}
+          <input type='range' min='0.5' max='2' step='0.1' value={zoom}
+          onChange={(e) => setZoom(+e.target.value)} />
+        </label>
+      </div>
+      <div className='stage'>
+        <pre ref={preRef} />
+        <canvas ref={displayCanvasRef} />
+      </div>
+      <video ref={videoRef} muted loop playsInline style={{display: 'none'}} />
+    </div>
+  )
+}

@@ -1,0 +1,36 @@
+body
+{
+  margin: 0;
+  background: #111;
+  color: #eee;
+  font-family: system-ui, sans-serif;
+}
+.app
+{
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.controls
+{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  flex-wrap: wrap;
+}
+.stage
+{
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+pre
+{
+  margin: 0;
+  font: 8px/8px monospace;
+  color: #fff;
+}
