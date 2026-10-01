@@ -3,7 +3,7 @@ body
   margin: 0;
   background: #111;
   color: #eee;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
 }
 .app
 {
@@ -14,11 +14,71 @@ body
 .controls
 {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  padding: 8px;
   flex-wrap: wrap;
+  padding: 10px 14px;
+  background-color: #1a1a1a;
+  border-bottom: 2px solid #780d0d;
 }
+.controls button,
+.controls .file-button,
+.controls label
+{
+  height: 30px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.025rem;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.controls button,
+.controls .file-button
+{
+  background-color: #780d0d;
+  color: white;
+  border: 1px solid #a51c1c;
+}
+
+.controls button:hover,
+.controls .file-button:hover
+{
+  background-color: #9c1414;
+}
+
+.controls button:active,
+.controls .file-button:active
+{
+  background-color: #5c0a0a;
+}
+.controls label
+{
+  background-color: transparent;
+  color: #ddd;
+  border: 1px solid #3e3c3c;
+}
+
+.controls label input[type='checkbox']
+{
+  accent-color: #780d0d;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.controls input[type='range']
+{
+  accent-color: #780d0d;
+  height: 30px;
+}
+
 .stage
 {
   flex: 1;
@@ -27,9 +87,11 @@ body
   display: flex;
   justify-content: center;
   align-items: center;
+  background: #0a0a0a;
 }
 .stage pre,
-.stage canvas{
+.stage canvas
+{
   transform-origin: center;
 }
 pre
@@ -38,13 +100,15 @@ pre
   font: 8px/8px monospace;
   color: #fff;
 }
-.toast{
+.toast
+{
   position: fixed;
   bottom: 20px;
   right: 20px;
   padding: 10px 16px;
   background: #222;
   color: white;
+  border: 1px solid #780d0d;
   border-radius: 6px;
   z-index: 1000;
 }

@@ -7,17 +7,19 @@ export default function App(){
   const videoRef = useRef(null)
   const preRef = useRef(null)
   const displayCanvasRef = useRef(null)
+  const imageRef = useRef(null)
   const [contrast, setContrast] = useState(1.15)
   const [zoom, setZoom] = useState(1)
   const [invert, setInvert] = useState(false)
   const [color, setColor] = useState(false)
+  const [usingImage, setUsingImage] = useState(false)
   const [message, setMessage] = useState('')
 
 
-  const settings = useRef({ contrast, zoom, invert, color})
+  const settings = useRef({ contrast, zoom, invert, color, usingImage})
   useEffect(() => {
-    settings.current = {contrast, zoom, invert, color}
-  }, [contrast, zoom, invert, color])
+    settings.current = {contrast, zoom, invert, color, usingImage}
+  }, [contrast, zoom, invert, color, usingImage])
 
   useEffect(() =>{
     const handleKeyDown = (e) => {
@@ -46,69 +48,74 @@ export default function App(){
 
     let handle
     const loop = () => {
-      if(video.videoWidth && !video.paused){
-        const {contrast, zoom, invert, color} = settings.current
-        const stage = pre.parentElement
-        const scale = Math.min(
-          (stage.clientWidth * zoom) / video.videoWidth,
-          (stage.clientHeight * zoom) / video.videoHeight
-        )
-        const columns = Math.max(1, Math.floor((video.videoWidth * scale) / cellWidth))
-        const rows = Math.max(1, Math.floor((video.videoHeight * scale) / cellHeight))
-        const contentWidth = columns * cellWidth
-        const contentHeight = rows * cellHeight
+        const {contrast, zoom, invert, color, usingImage} = settings.current
+        const source = usingImage ? imageRef.current : video
+        const srcWidth = usingImage ? source?.naturalWidth : video.videoWidth
+        const srcHeight = usingImage ? source?.naturalHeight : video.videoHeight
+        const ready = usingImage ? !!source : (video.videoWidth && !video.paused)
 
-        const fitScale = Math.min(stage.clientWidth / contentWidth, stage.clientHeight/ contentHeight)
-        const transform = `scale(${fitScale})`
+          if(ready){
+          const stage = pre.parentElement
+          const scale = Math.min(
+            (stage.clientWidth * zoom) / srcWidth,
+            (stage.clientHeight * zoom) / srcHeight
+          )
+          const columns = Math.max(1, Math.floor((srcWidth * scale) / cellWidth))
+          const rows = Math.max(1, Math.floor((srcHeight * scale) / cellHeight))
+          const contentWidth = columns * cellWidth
+          const contentHeight = rows * cellHeight
 
-        pre.style.transform = transform
-        displayCanvas.style.transform = transform
+          const fitScale = Math.min(stage.clientWidth / contentWidth, stage.clientHeight/ contentHeight)
+          const transform = `scale(${fitScale})`
 
-        canvas.width = columns
-        canvas.height = rows
-        ctx.drawImage(video, 0, 0, columns, rows)
-        const {data} = ctx.getImageData(0,0,columns, rows)
-        if(color){
-          pre.style.display = 'none'
-          displayCanvas.style.display = 'block'
-          displayCanvas.width = columns * cellWidth
-          displayCanvas.height = rows *cellHeight
-          displayCtx.font = '8px monospace'
-          displayCtx.textBaseline = 'top'
-          displayCtx.fillStyle = '#2d2d2d'
-          displayCtx.fillRect(0,0, displayCanvas.width, displayCanvas.height)
+          pre.style.transform = transform
+          displayCanvas.style.transform = transform
 
-          for(let y = 0; y < rows; y++){
-            for(let x = 0; x < columns ; x++){
-              const i = (y * columns + x) * 4
-              const r = data[i], g = data[i +1], b = data[i+2]
-              let gray = 0.299 *r + 0.587 *g + 0.114 * b
-              gray = Math.min(255, Math.max(0, (gray -128) * contrast + 128))
-              const index = Math.floor(((255 - gray) * (CHARS.length -1)) / 255)
-              const ir = invert ? 255 - r : r;
-              const ig = invert ? 255 - g : g;
-              const ib = invert ? 255 - b : b;
-              displayCtx.fillStyle = `rgb(${ir}, ${ig}, ${ib})`
-              displayCtx.fillText(CHARS[index], x * cellWidth, y * cellHeight)
+          canvas.width = columns
+          canvas.height = rows
+          ctx.drawImage(source, 0, 0, columns, rows)
+          const {data} = ctx.getImageData(0,0,columns, rows)
+          if(color){
+            pre.style.display = 'none'
+            displayCanvas.style.display = 'block'
+            displayCanvas.width = columns * cellWidth
+            displayCanvas.height = rows *cellHeight
+            displayCtx.font = '8px monospace'
+            displayCtx.textBaseline = 'top'
+            displayCtx.fillStyle = '#2d2d2d'
+            displayCtx.fillRect(0,0, displayCanvas.width, displayCanvas.height)
+
+            for(let y = 0; y < rows; y++){
+              for(let x = 0; x < columns ; x++){
+                const i = (y * columns + x) * 4
+                const r = data[i], g = data[i +1], b = data[i+2]
+                let gray = 0.299 *r + 0.587 *g + 0.114 * b
+                gray = Math.min(255, Math.max(0, (gray -128) * contrast + 128))
+                const index = Math.floor(((255 - gray) * (CHARS.length -1)) / 255)
+                const ir = invert ? 255 - r : r;
+                const ig = invert ? 255 - g : g;
+                const ib = invert ? 255 - b : b;
+                displayCtx.fillStyle = `rgb(${ir}, ${ig}, ${ib})`
+                displayCtx.fillText(CHARS[index], x * cellWidth, y * cellHeight)
+              }
             }
-          }
-        } else{
-          pre.style.display = 'block'
-          displayCanvas.style.display = 'none'
-          let out = ''
-          for(let y = 0;y < rows; y++){
-            for(let x = 0; x < columns; x++){
-              const i = (y * columns +x) * 4
-              let gray = 0.299 * data[i] + 0.587 * data [i + 1] + 0.114 * data[i +2]
-              gray = Math.min(255, Math.max(0, (gray - 128) * contrast + 128))
-              if (invert) gray = 255 - gray
-              out += CHARS[Math.floor(((255 - gray) * (CHARS.length-1)) / 255)]
+          } else{
+            pre.style.display = 'block'
+            displayCanvas.style.display = 'none'
+            let out = ''
+            for(let y = 0;y < rows; y++){
+              for(let x = 0; x < columns; x++){
+                const i = (y * columns +x) * 4
+                let gray = 0.299 * data[i] + 0.587 * data [i + 1] + 0.114 * data[i +2]
+                gray = Math.min(255, Math.max(0, (gray - 128) * contrast + 128))
+                if (invert) gray = 255 - gray
+                out += CHARS[Math.floor(((255 - gray) * (CHARS.length-1)) / 255)]
+              }
+              out += '\n'
             }
-            out += '\n'
+            pre.textContent = out
           }
-          pre.textContent = out
         }
-      }
       handle = requestAnimationFrame(loop)
     }
     loop()
@@ -119,17 +126,30 @@ export default function App(){
     video.srcObject?.getTracks().forEach((t) => t.stop())
     video.srcObject = null
   }
-  const loadFile = (e) => {
+  const loadMedia = (e) =>{
     const file = e.target.files[0]
     if(!file) return
-    stopCamera()
-    const video = videoRef.current
-    video.src = URL.createObjectURL(file)
-    video.play()
+    if(file.type.startsWith('image/')){
+      stopCamera()
+      videoRef.current.pause()
+      const img = new Image()
+      img.onload = () =>{
+        imageRef.current = img
+        setUsingImage(true)
+      }
+      img.src = URL.createObjectURL(file)
+    } else if(file.type.startsWith('video/')){
+      setUsingImage(false)
+      stopCamera()
+      const video = videoRef.current
+      video.src = URL.createObjectURL(file)
+      video.play()
+    }
   }
   const toggleCamera = async ()=> {
     const video = videoRef.current
     if(video.srcObject) return stopCamera()
+    setUsingImage(false)
     video.removeAttribute('src')
     video.srcObject = await navigator.mediaDevices.getUserMedia({video: true})
     video.play()
@@ -157,7 +177,10 @@ export default function App(){
   return (
     <div className='app'>
       <div className='controls'>
-        <input type='file' accept='video/*' onChange={loadFile} />
+        <label className='file-button'>
+          Load Image/Video
+          <input type='file' accept='video/*, image/*' onChange={loadMedia} style={{display:'none'}}/>
+        </label>
         <button onClick={toggleCamera}>Camera</button>
         <button onClick={togglePlay}>Play / Pause</button>
         {color ? <button onClick={copyFrame}>Copy Frame</button>
