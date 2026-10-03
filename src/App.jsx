@@ -189,20 +189,33 @@ export default function App(){
       })
       showMessage('Frame Copied!')
   }
+  const getSupportedMimeType = () =>{
+    const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4']
+    return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || ''
+  }
   const startRecording = () => {
+    if(usingImage){
+      copyFrame()
+      return
+    }
     const stream = displayCanvasRef.current.captureStream(60)
-    const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') ? 'video/mp4;codecs=avc1' : 'video/mp4'
+    const mimeType = getSupportedMimeType()
+    if(!mimeType) {
+      showMessage('Recording not supported by this browser')
+      return
+    }
     const recorder = new MediaRecorder(stream, {mimeType, videoBitsPerSecond: 32_000_000})
     recordedChunksRef.current = []
     recorder.ondataavailable = (e) => {
       if(e.data.size > 0) recordedChunksRef.current.push(e.data)
     }
     recorder.onstop = () => {
-      const blob  = new Blob(recordedChunksRef.current, {type: 'video/mp4'})
+      const blob  = new Blob(recordedChunksRef.current, {type: mimeType})
       const url = URL.createObjectURL(blob)
+      const extension = mimeType.includes('mp4') ? 'mp4' : 'webm'
       const a = document.createElement('a')
       a.href = url
-      a.download = `wascii-recording-${Date.now()}.mp4`
+      a.download = `wascii-recording-${Date.now()}.${extension}`
       a.click()
       URL.revokeObjectURL(url)
     }
