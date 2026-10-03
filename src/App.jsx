@@ -107,6 +107,13 @@ export default function App(){
           } else{
             pre.style.display = 'block'
             displayCanvas.style.display = 'none'
+            displayCanvas.width = columns * cellWidth
+            displayCanvas.height = rows *cellHeight
+            displayCtx.font = '8px monospace'
+            displayCtx.textBaseline = 'top'
+            displayCtx.fillStyle = '#2d2d2d'
+            displayCtx.fillRect(0,0, displayCanvas.width, displayCanvas.height)
+            displayCtx.fillStyle = '#fff'
             let out = ''
             for(let y = 0;y < rows; y++){
               for(let x = 0; x < columns; x++){
@@ -115,6 +122,7 @@ export default function App(){
                 gray = Math.min(255, Math.max(0, (gray - 128) * contrast + 128))
                 if (invert) gray = 255 - gray
                 out += CHARS[Math.floor(((255 - gray) * (CHARS.length-1)) / 255)]
+                displayCtx.fillText(out, x * cellWidth, y + cellHeight)
               }
               out += '\n'
             }
