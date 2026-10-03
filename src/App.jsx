@@ -190,7 +190,8 @@ export default function App(){
       showMessage('Frame Copied!')
   }
   const getSupportedMimeType = () =>{
-    const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4']
+    const isApple = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && !/CriOS|FxOS|Edg/.test(navigator.userAgent)
+    const candidates = isApple ? ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm'] : ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4']
     return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || ''
   }
   const startRecording = () => {
