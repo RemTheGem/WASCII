@@ -191,18 +191,18 @@ export default function App(){
   }
   const startRecording = () => {
     const stream = displayCanvasRef.current.captureStream(60)
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm'
+    const mimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') ? 'video/mp4;codecs=avc1' : 'video/mp4'
     const recorder = new MediaRecorder(stream, {mimeType, videoBitsPerSecond: 32_000_000})
     recordedChunksRef.current = []
     recorder.ondataavailable = (e) => {
       if(e.data.size > 0) recordedChunksRef.current.push(e.data)
     }
     recorder.onstop = () => {
-      const blob  = new Blob(recordedChunksRef.current, {type: 'video/webm'})
+      const blob  = new Blob(recordedChunksRef.current, {type: 'video/mp4'})
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `wascii-recording-${Date.now()}.webm`
+      a.download = `wascii-recording-${Date.now()}.mp4`
       a.click()
       URL.revokeObjectURL(url)
     }
