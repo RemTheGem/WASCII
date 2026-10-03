@@ -8,6 +8,9 @@ export default function App(){
   const preRef = useRef(null)
   const displayCanvasRef = useRef(null)
   const imageRef = useRef(null)
+  const mediaRecorderRef = useRef(null)
+  const recordedChunksRef = useRef([])
+  const [recording, setRecording] = useState(false)
   const [contrast, setContrast] = useState(1.15)
   const [zoom, setZoom] = useState(1)
   const [invert, setInvert] = useState(false)
@@ -74,11 +77,13 @@ export default function App(){
           canvas.width = columns
           canvas.height = rows
           // flip camera
+          ctx.save()
           if(video.srcObject){
             ctx.translate(columns, 0)
             ctx.scale(-1, 1)
           }
           ctx.drawImage(source, 0, 0, columns, rows)
+          ctx.restore()
           const {data} = ctx.getImageData(0,0,columns, rows)
           if(color){
             pre.style.display = 'none'
@@ -87,7 +92,7 @@ export default function App(){
             displayCanvas.height = rows *cellHeight
             displayCtx.font = '8px monospace'
             displayCtx.textBaseline = 'top'
-            displayCtx.fillStyle = '#2d2d2d'
+            displayCtx.fillStyle = '#0a0a0a'
             displayCtx.fillRect(0,0, displayCanvas.width, displayCanvas.height)
 
             for(let y = 0; y < rows; y++){
@@ -111,7 +116,7 @@ export default function App(){
             displayCanvas.height = rows *cellHeight
             displayCtx.font = '8px monospace'
             displayCtx.textBaseline = 'top'
-            displayCtx.fillStyle = '#2d2d2d'
+            displayCtx.fillStyle = '#0a0a0a'
             displayCtx.fillRect(0,0, displayCanvas.width, displayCanvas.height)
             displayCtx.fillStyle = '#fff'
             let out = ''
@@ -121,8 +126,9 @@ export default function App(){
                 let gray = 0.299 * data[i] + 0.587 * data [i + 1] + 0.114 * data[i +2]
                 gray = Math.min(255, Math.max(0, (gray - 128) * contrast + 128))
                 if (invert) gray = 255 - gray
-                out += CHARS[Math.floor(((255 - gray) * (CHARS.length-1)) / 255)]
-                displayCtx.fillText(out, x * cellWidth, y + cellHeight)
+                const chr = CHARS[Math.floor(((255 - gray) * (CHARS.length-1)) / 255)] 
+                out += chr
+                displayCtx.fillText(chr, x * cellWidth, y * cellHeight)
               }
               out += '\n'
             }
@@ -183,6 +189,30 @@ export default function App(){
       })
       showMessage('Frame Copied!')
   }
+  const startRecording = () => {
+    const stream = displayCanvasRef.current.captureStream(30)
+    const recorder = new MediaRecorder(stream, {mimeType: 'video/webm'})
+    recordedChunksRef.current = []
+    recorder.ondataavailable = (e) => {
+      if(e.data.size > 0) recordedChunksRef.current.push(e.data)
+    }
+    recorder.onstop = () => {
+      const blob  = new Blob(recordedChunksRef.current, {type: 'video/webm'})
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `wascii-recording-${Date.now()}.webm`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+    recorder.start()
+    mediaRecorderRef.current = recorder
+    setRecording(true)
+  }
+  const stopRecording = () =>{
+    mediaRecorderRef.current?.stop()
+    setRecording(false)
+  }
   const showMessage = (text) => {
     setMessage(text)
     setTimeout(() => setMessage(''), 2000)
@@ -199,6 +229,9 @@ export default function App(){
         {color ? <button onClick={copyFrame}>Copy Frame</button>
         : <button onClick={copyAsText}>Copy as Text</button>
         }
+        <button onClick={recording ? stopRecording : startRecording}>
+          {recording ? 'Stop Recording' : 'Record'}
+        </button>
         <label>
           <input type='checkbox' checked={color} onChange={(e)=>setColor(e.target.checked)} /> Color
         </label>
