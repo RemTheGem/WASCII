@@ -190,8 +190,9 @@ export default function App(){
       showMessage('Frame Copied!')
   }
   const startRecording = () => {
-    const stream = displayCanvasRef.current.captureStream(30)
-    const recorder = new MediaRecorder(stream, {mimeType: 'video/webm'})
+    const stream = displayCanvasRef.current.captureStream(60)
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm'
+    const recorder = new MediaRecorder(stream, {mimeType, videoBitsPerSecond: 32_000_000})
     recordedChunksRef.current = []
     recorder.ondataavailable = (e) => {
       if(e.data.size > 0) recordedChunksRef.current.push(e.data)
@@ -226,7 +227,7 @@ export default function App(){
         </label>
         <button onClick={toggleCamera}>Camera</button>
         <button onClick={togglePlay}>Play / Pause</button>
-        {color ? <button onClick={copyFrame}>Copy Frame</button>
+        {color ? <button onClick={copyFrame}>Copy Image</button>
         : <button onClick={copyAsText}>Copy as Text</button>
         }
         <button onClick={recording ? stopRecording : startRecording}>
