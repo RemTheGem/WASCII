@@ -73,6 +73,11 @@ export default function App(){
 
           canvas.width = columns
           canvas.height = rows
+          // flip camera
+          if(video.srcObject){
+            ctx.translate(columns, 0)
+            ctx.scale(-1, 1)
+          }
           ctx.drawImage(source, 0, 0, columns, rows)
           const {data} = ctx.getImageData(0,0,columns, rows)
           if(color){
